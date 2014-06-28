@@ -25,18 +25,6 @@ echo Validating prerequisites
 hash node 2>/dev/null
 exitWithMessageOnError "Missing node.js executable, please install node.js, if already installed make sure it can be reached from current environment."
 
-# Check composer is there
-if [ ! -f composer.phar ];
-then
-  echo "Downloading Composer"
-  curl -sS https://getcomposer.org/installer | php -- --quiet
-  exitWithMessageOnError "Composer download failed"
-else
-  echo "Updating Composer"
-  php composer.phar self-update
-  exitWithMessageOnError "Composer self-update failed"
-fi
-
 # Setup
 # -----
 echo Setup env variables
@@ -85,16 +73,39 @@ fi
 # ----------
 echo Initializing PHP
 
-export PHP_INI_SCAN_DIR=$DEPLOYMENT_SOURCE/app/website/php
-export PHP_BASE_CUSTOM_EXTENSIONS_DIR=$DEPLOYMENT_SOURCE/app/website/php/ext
+export PHP_INI_SCAN_DIR=$DEPLOYMENT_SOURCE/app/websites/php
+export PHP_BASE_CUSTOM_EXTENSIONS_DIR=$DEPLOYMENT_SOURCE/app/websites/php/ext
 
 echo Initializing Symfony project
-export SYMFONY_ENV=prod
+export SYMFONY_ENV=azure
 
 cd "$DEPLOYMENT_SOURCE"
-# Invoke Composer, but without the scripts section because subprocesses don't have the correct user and permissions
-php composer.phar install --prefer-dist -v --optimize-autoloader --no-dev --no-interaction
-exitWithMessageOnError "Composer install failed"
+# Run composer install only if there is a difference between the new composer.lock and the previous one
+diff composer.lock "$DEPLOYMENT_TARGET/composer.lock"
+
+if [ ! $? -eq 0 ]; then
+  # Check composer is there
+  if [ ! -f composer.phar ];
+  then
+    echo "Downloading Composer"
+    curl -sS https://getcomposer.org/installer | php -- --quiet
+    exitWithMessageOnError "Composer download failed"
+  else
+    echo "Updating Composer"
+    php composer.phar self-update
+    exitWithMessageOnError "Composer self-update failed"
+  fi
+
+  php composer.phar install --prefer-dist -v --no-interaction --optimize-autoloader
+  exitWithMessageOnError "Composer install failed"
+else
+  echo No need to run composer install
+  php app/console cache:clear
+
+  php app/console assets:install web
+fi
+
+php app/console assetic:dump
 
 # 1. KuduSync
 if [[ "$IN_PLACE_DEPLOYMENT" -ne "1" ]]; then
@@ -114,7 +125,7 @@ if [[ -n "$POST_DEPLOYMENT_ACTION" ]]; then
   exitWithMessageOnError "post deployment action failed"
 fi
 
-echo "Clearing Production cache by deleting $TEMP/cache/prod"
-rm -Rf "$TEMP/cache/prod"
+echo "Clearing Production cache by deleting $TEMP/cache/azure"
+rm -Rf "$TEMP/cache/azure"
 
 echo "Finished successfully."
