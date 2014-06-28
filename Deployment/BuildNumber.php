@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Deployment;
 
 use Symfony\Component\Yaml\Yaml;
@@ -20,7 +20,9 @@ use Symfony\Component\Yaml\Yaml;
  */
 class BuildNumber
 {
+
     /**
+     *
      * @var string
      */
     private $file;
@@ -32,16 +34,16 @@ class BuildNumber
      */
     static public function createInDirectory($dir)
     {
-        if ( ! is_dir($dir) || ! is_writable($dir)) {
+        if (! is_dir($dir) || ! is_writable($dir)) {
             throw new \InvalidArgumentException("Directory to load build number from is not writable or does not exist: " . $dir);
         }
-
+        
         $buildFile = $dir . DIRECTORY_SEPARATOR . "azure_build_number.yml";
-
-        if (!file_exists($buildFile)) {
+        
+        if (! file_exists($buildFile)) {
             file_put_contents($buildFile, "parameters:\n  azure_build: 0");
         }
-
+        
         return new self($buildFile);
     }
 
@@ -58,8 +60,8 @@ class BuildNumber
     public function get()
     {
         $config = Yaml::parse($this->file);
-
-        return (int)$config['parameters']['azure_build'];
+        
+        return (int) $config['parameters']['azure_build'];
     }
 
     private function write($buildNumber)
@@ -67,7 +69,8 @@ class BuildNumber
         $yaml = Yaml::dump(array(
             'parameters' => array(
                 'azure_build' => $buildNumber
-            )), 2);
+            )
+        ), 2);
         file_put_contents($this->file, $yaml);
     }
 
@@ -79,10 +82,10 @@ class BuildNumber
     public function increment()
     {
         $buildNumber = $this->get();
-        $buildNumber++;
-
+        $buildNumber ++;
+        
         $this->write($buildNumber);
-
+        
         return $buildNumber;
     }
 }

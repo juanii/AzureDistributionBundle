@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Deployment\Assets;
 
 /**
@@ -18,19 +18,20 @@ namespace WindowsAzure\DistributionBundle\Deployment\Assets;
  */
 class LocalStrategy extends AssetStrategy
 {
+
     public function deploy($documentRoot, $buildNumber)
     {
         // cleanup webdirectory, otherwise it gets huge.
         $assetPath = $documentRoot . DIRECTORY_SEPARATOR . "v%d";
         $filesystem = $this->container->get('filesystem');
-        for ($i = $buildNumber; $i > 0; $i--) {
+        for ($i = $buildNumber; $i > 0; $i --) {
             $oldAssetPath = sprintf($assetPath, $i);
             if (file_exists($oldAssetPath)) {
                 $filesystem->remove($oldAssetPath);
             }
         }
-
-        $this->moveTo($documentRoot . DIRECTORY_SEPARATOR . "v". $buildNumber);
+        
+        $this->moveTo($documentRoot . DIRECTORY_SEPARATOR . "v" . $buildNumber);
     }
 
     protected function getFilesystem()

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Command;
 
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -20,33 +20,18 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class WebsiteInitCommand extends ContainerAwareCommand
 {
+
     protected function configure()
     {
-        $this
-            ->setName('azure:websites:init')
-            ->setDescription('Initialize project for deployment on Windows Azure Websites via Git')
-        ;
+        $this->setName('azure:websites:init')->setDescription('Initialize project for deployment on Windows Azure Websites via Git');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $kernelRoot = $this->getContainer()->getParameter('kernel.root_dir');
-
+        $fileSystem = $this->getContainer()->get('filesystem');
+        
         $output->writeln('Copy Files for Windows Azure Websites deployment to project root:');
-
-        copy(__DIR__ . "/../Resources/private/websites/.deployment", $kernelRoot . "/../.deployment");
-        $output->writeln('[copy] .deployment');
-
-        copy(__DIR__ . "/../Resources/private/websites/deploy.sh", $kernelRoot . "/../deploy.sh");
-        $output->writeln('[copy] deploy.sh');
-
-        $output->writeln('Copy Files for IIS configuration into the front dir');
-        copy(__DIR__ . "/../Resources/private/websites/web/web.config", $kernelRoot . "/../web/web.config");
-        $output->writeln('[copy] web.config');
-
-        $output->writeln('Copy Files for Azure PHP configuration');
-        $fs = $this->getContainer()->get('filesystem');
-        $fs->mirror(__DIR__ . "/../Resources/private/websites/app/php", $kernelRoot . '/website');
-
+        $fileSystem->mirror(__DIR__ . "/../Resources/private/websites/", $kernelRoot . "/../");
     }
 }
