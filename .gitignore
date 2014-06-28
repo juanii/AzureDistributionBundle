@@ -5,3 +5,6 @@ build
 _site
 *.csdef.work
 phpunit.xml
+.buildpath
+.project
+.settings
