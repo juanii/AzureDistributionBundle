@@ -9,12 +9,15 @@
     ],
     "require": {
         "symfony/symfony": "~2.3",
-        "azure/windowsazure": "dev-dev@dev"
+        "microsoft/windowsazure": "dev-dev@dev"
     },
     "repositories": [
         {
             "type": "pear",
             "url": "http://pear.php.net"
+        }, {
+            "type": "vcs",
+            "url" : "https://github.com/Azure/azure-sdk-for-php"
         }
     ],
     "autoload": {
