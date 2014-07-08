@@ -9,7 +9,7 @@
     ],
     "require": {
         "symfony/symfony": "~2.3",
-        "microsoft/windowsazure": "dev-dev@dev"
+        "azure/windowsazure": "dev-dev@dev"
     },
     "repositories": [
         {
