@@ -1,34 +1,46 @@
 <?xml version="1.0" ?>
 
 <container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
-    <parameters>
-        <parameter key="windows_azure_distribution.key_value_store.entity_manager.class">Doctrine\KeyValueStore\EntityManager</parameter>
-        <parameter key="windows_azure_distribution.key_value_store.annotation_driver.class">Doctrine\KeyValueStore\Mapping\AnnotationDriver</parameter>
-        <parameter key="windows_azure_distribution.key_value_store.storage.class">Doctrine\KeyValueStore\Storage\AzureSdkTableStorage</parameter>
-        <parameter key="windows_azure_distribution.key_value_store.configuration.class">Doctrine\KeyValueStore\Configuration</parameter>
-    </parameters>
+	<parameters>
+		<parameter
+			key="windows_azure_distribution.key_value_store.entity_manager.class">Doctrine\KeyValueStore\EntityManager</parameter>
+		<parameter
+			key="windows_azure_distribution.key_value_store.annotation_driver.class">Doctrine\KeyValueStore\Mapping\AnnotationDriver</parameter>
+		<parameter key="windows_azure_distribution.key_value_store.storage.class">Doctrine\KeyValueStore\Storage\AzureSdkTableStorage</parameter>
+		<parameter
+			key="windows_azure_distribution.key_value_store.configuration.class">Doctrine\KeyValueStore\Configuration</parameter>
+	</parameters>
 
-    <services>
-        <service id="windows_azure_distribution.key_value_store.entity_manager" class="%windows_azure_distribution.key_value_store.entity_manager.class%">
-            <argument type="service" id="windows_azure_distribution.key_value_store.storage" />
-            <argument type="service" id="windows_azure_distribution.key_value_store.configuration" />
-        </service>
+	<services>
+		<service id="windows_azure_distribution.key_value_store.entity_manager"
+			class="%windows_azure_distribution.key_value_store.entity_manager.class%">
+			<argument type="service"
+				id="windows_azure_distribution.key_value_store.storage" />
+			<argument type="service"
+				id="windows_azure_distribution.key_value_store.configuration" />
+		</service>
 
-        <service id="windows_azure_distribution.key_value_store.configuration" class="%windows_azure_distribution.key_value_store.configuration.class%">
-            <call method="setMappingDriverImpl">
-                <argument type="service" id="windows_azure_distribution.key_value_store.annotation_driver" />
-            </call>
-        </service>
+		<service id="windows_azure_distribution.key_value_store.configuration"
+			class="%windows_azure_distribution.key_value_store.configuration.class%">
+			<call method="setMappingDriverImpl">
+				<argument type="service"
+					id="windows_azure_distribution.key_value_store.annotation_driver" />
+			</call>
+		</service>
 
-        <service id="windows_azure_distribution.key_value_store.annotation_driver" class="%windows_azure_distribution.key_value_store.annotation_driver.class%">
-            <argument type="service" id="annotation_reader" />
-        </service>
+		<service
+			id="windows_azure_distribution.key_value_store.annotation_driver"
+			class="%windows_azure_distribution.key_value_store.annotation_driver.class%">
+			<argument type="service" id="annotation_reader" />
+		</service>
 
-        <service id="windows_azure_distribution.key_value_store.storage" class="%windows_azure_distribution.key_value_store.storage.class%">
-            <argument type="service" id="windows_azure_distribution.key_value_store.storage_client" />
-        </service>
-    </services>
+		<service id="windows_azure_distribution.key_value_store.storage"
+			class="%windows_azure_distribution.key_value_store.storage.class%">
+			<argument type="service"
+				id="windows_azure_distribution.key_value_store.storage_client" />
+		</service>
+	</services>
 </container>

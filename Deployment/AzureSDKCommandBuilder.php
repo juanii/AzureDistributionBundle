@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Deployment;
 
 use Symfony\Component\Process\Process;
@@ -22,17 +22,21 @@ use Symfony\Component\Process\Process;
  */
 class AzureSDKCommandBuilder
 {
+
     /**
+     *
      * @var string
      */
     private $rootDir;
 
     /**
+     *
      * @var string
      */
     private $outputDir;
 
     /**
+     *
      * @var string
      */
     private $binDir;
@@ -51,14 +55,14 @@ class AzureSDKCommandBuilder
     /**
      * Build Packaging command
      *
-     * @param ServiceDefinition $serviceDefinition
-     * @param string $outputDir
-     * @param bool $isDevFabric
+     * @param ServiceDefinition $serviceDefinition            
+     * @param string $outputDir            
+     * @param bool $isDevFabric            
      * @return array
      */
     public function buildPackageCmd(ServiceDefinition $serviceDefinition, $outputDir, $isDevFabric)
     {
-        $args = array (
+        $args = array(
             $this->getAzureSdkBinaryFolder() . 'cspack.exe',
             $serviceDefinition->getPath()
         );
@@ -69,32 +73,45 @@ class AzureSDKCommandBuilder
             $args[] = $this->getRoleArgument($roleName, $serviceDefinition);
         }
         $args[] = sprintf('/out:%s', $outputDir);
-
+        
         if ($isDevFabric) {
             $args[] = '/copyOnly';
         }
-
+        
         return $args;
     }
 
     public function buildDevStoreStartCmd()
     {
-        return array($this->getAzureSdkBinaryFolder() . 'csrun.exe', '/devstore:start');
+        return array(
+            $this->getAzureSdkBinaryFolder() . 'csrun.exe',
+            '/devstore:start'
+        );
     }
 
     public function buildDevFabricStartCmd()
     {
-        return array($this->getAzureSdkBinaryFolder() . 'csrun.exe', '/devfabric:start');
+        return array(
+            $this->getAzureSdkBinaryFolder() . 'csrun.exe',
+            '/devfabric:start'
+        );
     }
 
     public function buildDevFabricRemoveAllCmd()
     {
-        return array($this->getAzureSdkBinaryFolder() . 'csrun.exe', '/removeAll');
+        return array(
+            $this->getAzureSdkBinaryFolder() . 'csrun.exe',
+            '/removeAll'
+        );
     }
 
     public function buildDevRunPackage($packagePath, ServiceConfiguration $serviceConfiguration)
     {
-        return array($this->getAzureSdkBinaryFolder() . 'csrun.exe', '/run:' . $packagePath . ';' . $serviceConfiguration->getPath(), '/launchBrowser');
+        return array(
+            $this->getAzureSdkBinaryFolder() . 'csrun.exe',
+            '/run:' . $packagePath . ';' . $serviceConfiguration->getPath(),
+            '/launchBrowser'
+        );
     }
 
     private function getRoleArgument($roleName, $serviceDefinition)
@@ -111,9 +128,17 @@ class AzureSDKCommandBuilder
         if ($this->binDir) {
             return $this->binDir;
         }
-
-        $programDirectories = array('ProgramFiles', 'ProgramFiles(x86)', 'ProgramW6432');
-        $binDirectories = array('Windows Azure SDK\*\bin', 'Microsoft SDKs\Windows Azure\.NET SDK\*\bin', 'Windows Azure Emulator\emulator');
+        
+        $programDirectories = array(
+            'ProgramFiles',
+            'ProgramFiles(x86)',
+            'ProgramW6432'
+        );
+        $binDirectories = array(
+            'Windows Azure SDK\*\bin',
+            'Microsoft SDKs\Windows Azure\.NET SDK\*\bin',
+            'Windows Azure Emulator\emulator'
+        );
         foreach ($programDirectories as $programDirectory) {
             if (isset($_SERVER[$programDirectory])) {
                 $programDirectory = $_SERVER[$programDirectory];
@@ -124,21 +149,24 @@ class AzureSDKCommandBuilder
                 }
             }
         }
-
+        
         throw new \RuntimeException("Cannot find Windows Azure SDK. You can download the SDK from http://www.windowsazure.com.");
     }
 
     public function getProcess($arguments)
     {
         $options['bypass_shell'] = true;
-
+        
         $command = array_shift($arguments);
-
-        $script = '"'.$command.'"';
+        
+        $script = '"' . $command . '"';
         if ($arguments) {
-            $script .= ' '.implode(' ', array_map(array($this, 'escape'), $arguments));
+            $script .= ' ' . implode(' ', array_map(array(
+                $this,
+                'escape'
+            ), $arguments));
         }
-        $script = 'cmd /V:ON /E:ON /C "'.$script.'"';
+        $script = 'cmd /V:ON /E:ON /C "' . $script . '"';
         return new Process($script, null, null, null, null, $options);
     }
 

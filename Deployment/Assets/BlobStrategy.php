@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Deployment\Assets;
 
 use WindowsAzure\DistributionBundle\Filesystem\AzureFilesystem;
@@ -22,12 +22,15 @@ use WindowsAzure\Blob\BlobRestProxy;
  */
 class BlobStrategy extends AssetStrategy
 {
+
     /**
+     *
      * @var string
      */
     const STREAM = 'azureassets';
 
     /**
+     *
      * @var BlobRestProxy
      */
     private $client;
@@ -35,14 +38,14 @@ class BlobStrategy extends AssetStrategy
     public function __construct($container)
     {
         parent::__construct($container);
-
+        
         $this->client = $container->get('windows_azure_distribution.assets.blob.storage');
     }
 
     public function deploy($documentRoot, $buildNumber)
     {
         Stream::register($this->client, self::STREAM);
-
+        
         $this->moveTo(self::STREAM . '://v' . $buildNumber);
     }
 

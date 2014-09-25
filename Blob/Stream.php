@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Azure Distribution Bundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Blob;
 
 use WindowsAzure\Blob\BlobRestProxy;
@@ -28,6 +28,7 @@ use Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesser;
  */
 class Stream
 {
+
     /**
      * Current file name
      *
@@ -71,6 +72,7 @@ class Stream
     private $blobs = null;
 
     /**
+     *
      * @var array
      */
     private static $clients = array();
@@ -78,8 +80,8 @@ class Stream
     /**
      * Register the given blob rest proxy as client for a stream wrapper.
      *
-     * @param BlobRestProxy $proxy
-     * @param string $name
+     * @param BlobRestProxy $proxy            
+     * @param string $name            
      */
     static public function register(BlobRestProxy $proxy, $name = 'azure')
     {
@@ -90,7 +92,7 @@ class Stream
     /**
      * Unregister stream wrapper client
      *
-     * @param string $name
+     * @param string $name            
      */
     static public function unregister($name)
     {
@@ -101,91 +103,88 @@ class Stream
     /**
      * Get the client for an azure stream name.
      *
-     * @param string $name
+     * @param string $name            
      * @return BlobRestProxy
      */
     static public function getClient($name)
     {
-        if ( ! isset(self::$clients[$name])) {
+        if (! isset(self::$clients[$name])) {
             throw new BlobException("There is no client registered for stream type '" . $name . "://");
         }
-
+        
         return self::$clients[$name];
     }
 
     /**
      * Retrieve storage client for this stream type
      *
-     * @param string $path
+     * @param string $path            
      * @return BlobClient
      */
     private function getStorageClient($path = '')
     {
         if ($this->storageClient === null) {
             $url = explode(':', $path);
-
-            if (!$url) {
+            
+            if (! $url) {
                 throw new BlobException('Could not parse path "' . $path . '".');
             }
-
+            
             $this->storageClient = self::getClient($url[0]);
-
-            if (!$this->storageClient) {
+            
+            if (! $this->storageClient) {
                 throw new BlobException('No storage client registered for stream type "' . $url[0] . '://".');
             }
         }
-
+        
         return $this->storageClient;
     }
 
     /**
      * Open the stream
      *
-     * @param  string  $path
-     * @param  string  $mode
-     * @param  integer $options
-     * @param  string  $opened_path
+     * @param string $path            
+     * @param string $mode            
+     * @param integer $options            
+     * @param string $opened_path            
      * @return boolean
      */
     public function stream_open($path, $mode, $options, &$opened_path)
     {
         $this->fileName = $path;
-        $blobName       = $this->getFileName($this->fileName);
-
+        $blobName = $this->getFileName($this->fileName);
+        
         if (empty($blobName)) {
             throw new BlobException("Empty blob path name given. Has to be a full filename.");
         }
-
+        
         // Write mode?
         if (strpbrk($mode, 'wax+')) {
             $this->writeMode = true;
         } else {
             $this->writeMode = false;
         }
-
+        
         // If read/append, fetch the file
-        if (!$this->writeMode || strpbrk($mode, 'ra+')) {
-            $blobResult = $this->getStorageClient($this->fileName)->getBlob(
-                $this->getContainerName($this->fileName),
-                $this->getFileName($this->fileName)
-            );
+        if (! $this->writeMode || strpbrk($mode, 'ra+')) {
+            $blobResult = $this->getStorageClient($this->fileName)->getBlob($this->getContainerName($this->fileName), $this->getFileName($this->fileName));
             $this->temporaryFileHandle = $blobResult->getContentStream();
-
+            
             return true;
         }
-
+        
         $this->temporaryFileName = tempnam(sys_get_temp_dir(), 'azure');
-
+        
         // Check the file can be opened
         $fh = @fopen($this->temporaryFileName, $mode);
         if ($fh === false) {
             return false;
         }
         fclose($fh);
-
+        
         // Open temporary file handle
         $this->temporaryFileHandle = fopen($this->temporaryFileName, $mode);
-
+        
         // Ok!
         return true;
     }
@@ -193,15 +192,15 @@ class Stream
     /**
      * Write to the stream
      *
-     * @param  string $data
+     * @param string $data            
      * @return integer
      */
     public function stream_write($data)
     {
-        if (!$this->temporaryFileHandle) {
+        if (! $this->temporaryFileHandle) {
             return 0;
         }
-
+        
         $len = strlen($data);
         fwrite($this->temporaryFileHandle, $data, $len);
         return $len;
@@ -215,35 +214,28 @@ class Stream
     public function stream_close()
     {
         @fclose($this->temporaryFileHandle);
-
+        
         // Upload the file?
         if ($this->writeMode) {
             // Make sure the container exists
-            if ( ! $this->containerExists($this->fileName)) {
-                $this->getStorageClient($this->fileName)->createContainer(
-                    $this->getContainerName($this->fileName)
-                );
+            if (! $this->containerExists($this->fileName)) {
+                $this->getStorageClient($this->fileName)->createContainer($this->getContainerName($this->fileName));
             }
-
+            
             $mimeTypeGuesser = MimeTypeGuesser::getInstance();
             $createBlobOptions = new CreateBlobOptions();
             $createBlobOptions->setBlobContentType($mimeTypeGuesser->guess($this->temporaryFileName));
-
+            
             // Upload the file
             try {
-                $result = $this->getStorageClient($this->fileName)->createBlockBlob(
-                    $this->getContainerName($this->fileName),
-                    $this->getFileName($this->fileName),
-                    fopen($this->temporaryFileName, "r"),
-                    $createBlobOptions
-                );
+                $result = $this->getStorageClient($this->fileName)->createBlockBlob($this->getContainerName($this->fileName), $this->getFileName($this->fileName), fopen($this->temporaryFileName, "r"), $createBlobOptions);
             } catch (Exception $ex) {
                 $this->cleanup();
-
+                
                 throw $ex;
             }
         }
-
+        
         $this->cleanup();
     }
 
@@ -258,15 +250,15 @@ class Stream
     /**
      * Read from the stream
      *
-     * @param  integer $count
+     * @param integer $count            
      * @return string
      */
     public function stream_read($count)
     {
-        if (!$this->temporaryFileHandle) {
+        if (! $this->temporaryFileHandle) {
             return false;
         }
-
+        
         return fread($this->temporaryFileHandle, $count);
     }
 
@@ -277,10 +269,10 @@ class Stream
      */
     public function stream_eof()
     {
-        if (!$this->temporaryFileHandle) {
+        if (! $this->temporaryFileHandle) {
             return true;
         }
-
+        
         return feof($this->temporaryFileHandle);
     }
 
@@ -297,16 +289,16 @@ class Stream
     /**
      * Update the read/write position of the stream
      *
-     * @param  integer $offset
-     * @param  integer $whence
+     * @param integer $offset            
+     * @param integer $whence            
      * @return boolean
      */
     public function stream_seek($offset, $whence)
     {
-        if (!$this->temporaryFileHandle) {
+        if (! $this->temporaryFileHandle) {
             return false;
         }
-
+        
         return (fseek($this->temporaryFileHandle, $offset, $whence) === 0);
     }
 
@@ -318,31 +310,25 @@ class Stream
     public function stream_flush()
     {
         $result = fflush($this->temporaryFileHandle);
-
-         // Upload the file?
+        
+        // Upload the file?
         if ($this->writeMode) {
             // Make sure the container exists
-            if ( ! $this->containerExists($this->fileName)) {
-                $this->getStorageClient($this->fileName)->createContainer(
-                    $this->getContainerName($this->fileName)
-                );
+            if (! $this->containerExists($this->fileName)) {
+                $this->getStorageClient($this->fileName)->createContainer($this->getContainerName($this->fileName));
             }
-
+            
             // Upload the file
             try {
-                $this->getStorageClient($this->fileName)->createBlockBlob(
-                    $this->getContainerName($this->fileName),
-                    $this->getFileName($this->fileName),
-                    $this->temporaryFileHandle
-                );
+                $this->getStorageClient($this->fileName)->createBlockBlob($this->getContainerName($this->fileName), $this->getFileName($this->fileName), $this->temporaryFileHandle);
             } catch (Exception $ex) {
                 @unlink($this->temporaryFileName);
                 unset($this->storageClient);
-
+                
                 throw $ex;
             }
         }
-
+        
         return $result;
     }
 
@@ -353,26 +339,23 @@ class Stream
      */
     public function stream_stat()
     {
-        if (!$this->temporaryFileHandle) {
+        if (! $this->temporaryFileHandle) {
             return false;
         }
-
+        
         return $this->url_stat($this->fileName, 0);
     }
 
     /**
      * Attempt to delete the item
      *
-     * @param  string $path
+     * @param string $path            
      * @return boolean
      */
     public function unlink($path)
     {
-        $this->getStorageClient($path)->deleteBlob(
-            $this->getContainerName($path),
-            $this->getFileName($path)
-        );
-
+        $this->getStorageClient($path)->deleteBlob($this->getContainerName($path), $this->getFileName($path));
+        
         // Clear the stat cache for this path.
         clearstatcache(true, $path);
         return true;
@@ -381,8 +364,8 @@ class Stream
     /**
      * Attempt to rename the item
      *
-     * @param  string  $path_from
-     * @param  string  $path_to
+     * @param string $path_from            
+     * @param string $path_to            
      * @return boolean False
      */
     public function rename($path_from, $path_to)
@@ -390,22 +373,14 @@ class Stream
         if ($this->getContainerName($path_from) != $this->getContainerName($path_to)) {
             throw new BlobException('Container name can not be changed.');
         }
-
+        
         if ($this->getFileName($path_from) == $this->getFileName($path_to)) {
             return true;
         }
-
-        $this->getStorageClient($path_from)->copyBlob(
-            $this->getContainerName($path_to),
-            $this->getFileName($path_to),
-            $this->getContainerName($path_from),
-            $this->getFileName($path_from)
-        );
-        $this->getStorageClient($path_from)->deleteBlob(
-            $this->getContainerName($path_from),
-            $this->getFileName($path_from)
-        );
-
+        
+        $this->getStorageClient($path_from)->copyBlob($this->getContainerName($path_to), $this->getFileName($path_to), $this->getContainerName($path_from), $this->getFileName($path_from));
+        $this->getStorageClient($path_from)->deleteBlob($this->getContainerName($path_from), $this->getFileName($path_from));
+        
         // Clear the stat cache for the affected paths.
         clearstatcache(true, $path_from);
         clearstatcache(true, $path_to);
@@ -415,8 +390,8 @@ class Stream
     /**
      * Return array of URL variables
      *
-     * @param  string $path
-     * @param  integer $flags
+     * @param string $path            
+     * @param integer $flags            
      * @return array
      */
     public function url_stat($path, $flags)
@@ -435,23 +410,22 @@ class Stream
         $stat['ctime'] = 0;
         $stat['blksize'] = 0;
         $stat['blocks'] = 0;
-
+        
         $info = null;
         try {
-            $metadata = $this->getStorageClient($path)->getBlobProperties(
-                        $this->getContainerName($path),
-                        $this->getFileName($path)
-                    );
-            $stat['size']  = $metadata->getProperties()->getContentLength();
-
+            $metadata = $this->getStorageClient($path)->getBlobProperties($this->getContainerName($path), $this->getFileName($path));
+            $stat['size'] = $metadata->getProperties()->getContentLength();
+            
             // Set the modification time and last modified to the Last-Modified header.
-            $lastmodified = $metadata->getProperties()->getLastModified()->format('U');
+            $lastmodified = $metadata->getProperties()
+                ->getLastModified()
+                ->format('U');
             $stat['mtime'] = $lastmodified;
             $stat['ctime'] = $lastmodified;
-
+            
             // Entry is a regular file.
             $stat['mode'] = 0100000;
-
+            
             return array_values($stat) + $stat;
         } catch (Exception $ex) {
             // Unexisting file...
@@ -462,9 +436,9 @@ class Stream
     /**
      * Create a new directory
      *
-     * @param  string  $path
-     * @param  integer $mode
-     * @param  integer $options
+     * @param string $path            
+     * @param integer $mode            
+     * @param integer $options            
      * @return boolean
      */
     public function mkdir($path, $mode, $options)
@@ -472,12 +446,10 @@ class Stream
         if ($this->getContainerName($path) != $this->getFileName($path)) {
             throw new BlobException('mkdir() with multiple levels is not supported on Windows Azure Blob Storage.');
         }
-
+        
         // Create container
         try {
-            $this->getStorageClient($path)->createContainer(
-                $this->getContainerName($path)
-            );
+            $this->getStorageClient($path)->createContainer($this->getContainerName($path));
             return true;
         } catch (Exception $ex) {
             return false;
@@ -487,8 +459,8 @@ class Stream
     /**
      * Remove a directory
      *
-     * @param  string  $path
-     * @param  integer $options
+     * @param string $path            
+     * @param integer $options            
      * @return boolean
      */
     public function rmdir($path, $options)
@@ -496,13 +468,11 @@ class Stream
         if ($this->getContainerName($path) != $this->getFileName($path)) {
             throw new BlobException('rmdir() with multiple levels is not supported on Windows Azure Blob Storage.');
         }
-
+        
         // Delete container
         try {
-            $this->getStorageClient($path)->deleteContainer(
-                $this->getContainerName($path)
-            );
-
+            $this->getStorageClient($path)->deleteContainer($this->getContainerName($path));
+            
             // Clear the stat cache so that affected paths are refreshed.
             clearstatcache();
             return true;
@@ -514,16 +484,16 @@ class Stream
     /**
      * Attempt to open a directory
      *
-     * @param  string $path
-     * @param  integer $options
+     * @param string $path            
+     * @param integer $options            
      * @return boolean
      */
     public function dir_opendir($path, $options)
     {
-        $this->blobs = $this->getStorageClient($path)->listBlobs(
-            $this->getContainerName($path)
-        )->getBlobs();
-
+        $this->blobs = $this->getStorageClient($path)
+            ->listBlobs($this->getContainerName($path))
+            ->getBlobs();
+        
         return is_array($this->blobs);
     }
 
@@ -567,7 +537,7 @@ class Stream
     /**
      * Extract container name
      *
-     * @param string $path
+     * @param string $path            
      * @return string
      */
     protected function getContainerName($path)
@@ -576,14 +546,14 @@ class Stream
         if ($url['host']) {
             return $url['host'];
         }
-
+        
         return '';
     }
 
     /**
      * Extract file name
      *
-     * @param string $path
+     * @param string $path            
      * @return string
      */
     protected function getFileName($path)
@@ -591,14 +561,14 @@ class Stream
         $url = parse_url($path);
         if ($url['host']) {
             $fileName = isset($url['path']) ? $url['path'] : $url['host'];
-
+            
             if (strpos($fileName, '/') === 0) {
                 $fileName = substr($fileName, 1);
             }
-
+            
             return str_replace("\\", "/", $fileName);
         }
-
+        
         return '';
     }
 
@@ -607,9 +577,9 @@ class Stream
         // List containers
         $options = new ListContainersOptions();
         $options->setPrefix($this->getContainerName($containerName));
-
+        
         $containers = $this->getStorageClient($containerName)->listContainers($options);
-
+        
         return count($containers->getContainers());
     }
 }

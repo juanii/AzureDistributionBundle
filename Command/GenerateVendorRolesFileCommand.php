@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,14 +11,12 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Command;
 
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-
 use WindowsAzure\DistributionBundle\Deployment\VendorRoleFilesListener;
 
 /**
@@ -27,23 +26,22 @@ use WindowsAzure\DistributionBundle\Deployment\VendorRoleFilesListener;
  */
 class GenerateVendorRolesFileCommand extends ContainerAwareCommand
 {
+
     protected function configure()
     {
-        $this
-            ->setName('azure:cloud-services:generate-vendor-roles-file')
+        $this->setName('azure:cloud-services:generate-vendor-roles-file')
             ->setDescription('Generates the roles file of your projects vendor directory for Windows Azure deployments')
-            ->addArgument('vendor-dir', InputArgument::OPTIONAL, 'Your projects vendor dir')
-        ;
+            ->addArgument('vendor-dir', InputArgument::OPTIONAL, 'Your projects vendor dir');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $output->writeln('<info>Generating Windows Azure role file</info>');
         $vendorDir = $input->getArgument('vendor-dir');
-        if ( !$vendorDir) {
+        if (! $vendorDir) {
             $vendorDir = getcwd() . DIRECTORY_SEPARATOR . "vendor";
         }
-
+        
         VendorRoleFilesListener::generateVendorRolesFile($vendorDir);
     }
 }

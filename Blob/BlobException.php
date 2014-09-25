@@ -1,5 +1,4 @@
 <?php
-
 namespace WindowsAzure\DistributionBundle\Blob;
 
 use RuntimeException;

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure TaskDemoBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\DependencyInjection\CompilerPass;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -24,14 +24,15 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
  */
 class ShardingPass implements CompilerPassInterface
 {
+
     public function process(ContainerBuilder $container)
     {
-        if ( ! $container->hasParameter('windows_azure_distribution.sharding')) {
+        if (! $container->hasParameter('windows_azure_distribution.sharding')) {
             return;
         }
-
+        
         $shards = $container->getParameter('windows_azure_distribution.sharding');
-
+        
         foreach ($shards as $connectionName => $options) {
             $this->registerShard($connectionName, $options, $container);
         }
@@ -39,34 +40,34 @@ class ShardingPass implements CompilerPassInterface
 
     private function registerShard($connectionName, $options, $container)
     {
-        $id      = 'doctrine.dbal.' . $connectionName . '_connection';
+        $id = 'doctrine.dbal.' . $connectionName . '_connection';
         $shardId = 'windows_azure_distribution.' . $connectionName . '_shard_manager';
-
-        if ( ! $container->hasDefinition($id)) {
+        
+        if (! $container->hasDefinition($id)) {
             throw new \InvalidArgumentException("No connection " . $connectionName . " found for federations.");
         }
-
-        $def  = $container->findDefinition($id);
+        
+        $def = $container->findDefinition($id);
         $args = $def->getArguments();
-
-        if ( ! isset($args[0]['driver']) || strpos($args[0]['driver'], 'sqlsrv') === false) {
+        
+        if (! isset($args[0]['driver']) || strpos($args[0]['driver'], 'sqlsrv') === false) {
             throw new \InvalidArgumentException("Sharding only possible with sqlsrv driver.");
         }
-
+        
         $args[0]['sharding'] = array(
-            'federationName'   => $options['federationName'],
-            'distributionKey'  => $options['distributionKey'],
+            'federationName' => $options['federationName'],
+            'distributionKey' => $options['distributionKey'],
             'distributionType' => $options['distributionType'],
-            'filteringEnabled' => $options['filteringEnabled'],
+            'filteringEnabled' => $options['filteringEnabled']
         );
         $args[0]['MultipleActiveResultSets'] = false;
-
+        
         $def->setArguments($args);
-
+        
         $shardDef = new Definition('Doctrine\DBAL\Sharding\SQLAzure\SQLAzureShardManager');
         $shardDef->addArgument(new Reference($id));
         $container->setDefinition($shardId, $shardDef);
-
+        
         if ($connectionName == 'default') {
             $container->setAlias('windows_azure_distribution.shard_manager', $shardId);
         }

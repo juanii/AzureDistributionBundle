@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\DependencyInjection;
 
 use Symfony\Component\Config\Resource\ResourceInterface;
@@ -23,6 +23,7 @@ use Symfony\Component\Config\Resource\ResourceInterface;
  */
 class EnvironmentResource implements ResourceInterface, \Serializable
 {
+
     protected $envParameters;
 
     public function __construct(array $envParameters = array())
@@ -43,7 +44,7 @@ class EnvironmentResource implements ResourceInterface, \Serializable
                 $parameters[strtolower(str_replace('__', '.', substr($key, 9)))] = $value;
             }
         }
-
+        
         return $parameters;
     }
 
