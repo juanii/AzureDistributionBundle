@@ -16,7 +16,7 @@
             "type": "pear",
             "url": "http://pear.php.net"
         }, {
-            "type": "vcs",
+            "type": "git",
             "url" : "https://github.com/Azure/azure-sdk-for-php"
         }
     ],
