@@ -15,8 +15,10 @@ namespace WindowsAzure\DistributionBundle\Blob;
 
 use WindowsAzure\Blob\BlobRestProxy;
 use WindowsAzure\Blob\Models\ListContainersOptions;
+use WindowsAzure\Blob\Models\CreateBlobOptions;
 use WindowsAzure\Common\ServiceException;
 use Exception;
+use Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesser;
 
 /**
  * Stream Wrapper implementation for Windows Azure Blob Storage
@@ -223,12 +225,17 @@ class Stream
                 );
             }
 
+            $mimeTypeGuesser = MimeTypeGuesser::getInstance();
+            $createBlobOptions = new CreateBlobOptions();
+            $createBlobOptions->setBlobContentType($mimeTypeGuesser->guess($this->temporaryFileName));
+
             // Upload the file
             try {
                 $result = $this->getStorageClient($this->fileName)->createBlockBlob(
                     $this->getContainerName($this->fileName),
                     $this->getFileName($this->fileName),
-                    fopen($this->temporaryFileName, "r")
+                    fopen($this->temporaryFileName, "r"),
+                    $createBlobOptions
                 );
             } catch (Exception $ex) {
                 $this->cleanup();
