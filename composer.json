@@ -24,7 +24,10 @@
 	"repositories" : [{
 			"type" : "pear",
 			"url" : "http://pear.php.net"
-		}
+		}, {
+            "type": "git",
+            "url" : "https://github.com/Azure/azure-sdk-for-php"
+        }
 	],
 	"autoload" : {
 		"psr-0" : {
