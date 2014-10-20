@@ -20,29 +20,52 @@ use WindowsAzure\DistributionBundle\DependencyInjection\CompilerPass\CustomItera
 use WindowsAzure\DistributionBundle\DependencyInjection\CompilerPass\PackageCompilersPass;
 use WindowsAzure\DistributionBundle\Blob\Stream;
 
+/**
+ * @author Benjamin Eberlei <kontakt@beberlei.de>
+ * @author Stéphane Escandell <stephane.escandell@gmail.com>
+ */
 class WindowsAzureDistributionBundle extends Bundle
 {
-
+    /**
+     * (non-PHPdoc)
+     * @see \Symfony\Component\HttpKernel\Bundle\Bundle::boot()
+     */
     public function boot()
     {
         parent::boot();
-        
+
         $streams = $this->container->getParameter('windows_azure_distribution.streams');
-        
+
         foreach ($streams as $streamName => $clientName) {
             $client = $this->container->get('windows_azure.blob.' . $clientName);
-            
+
             Stream::register($client, $streamName);
         }
     }
 
+    /**
+     * (non-PHPdoc)
+     * @see \Symfony\Component\HttpKernel\Bundle\Bundle::build()
+     */
     public function build(ContainerBuilder $container)
     {
         parent::build($container);
-        
+
         $container->addCompilerPass(new ShardingPass());
         $container->addCompilerPass(new CustomIteratorsPass());
         $container->addCompilerPass(new PackageCompilersPass());
     }
+
+    /**
+     * (non-PHPdoc)
+     * @see \Symfony\Component\HttpKernel\Bundle\Bundle::getContainerExtension()
+     */
+    public function getContainerExtension()
+    {
+        $this->extension = new DependencyInjection\WindowsAzureDistributionExtension();
+
+        return $this->extension;
+    }
+
 }
 

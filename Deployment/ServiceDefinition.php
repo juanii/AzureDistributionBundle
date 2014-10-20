@@ -32,7 +32,7 @@ class ServiceDefinition
 
     /**
      *
-     * @var DOMDocument
+     * @var \DOMDocument
      */
     private $dom;
 
@@ -50,21 +50,21 @@ class ServiceDefinition
 
     /**
      *
-     * @param string $serviceDefinitionFile            
+     * @param string $serviceDefinitionFile
      */
     public function __construct($serviceDefinitionFile, array $roleFiles = array(), array $customIterators = array())
     {
         if (! file_exists($serviceDefinitionFile)) {
             throw new \InvalidArgumentException(sprintf("No valid file-path given. The ServiceDefinition should be at %s but could not be found.", $serviceDefinitionFile));
         }
-        
+
         $this->serviceDefinitionFile = $serviceDefinitionFile;
-        
+
         $this->customIterators = $customIterators;
-        
+
         $this->dom = new \DOMDocument('1.0', 'UTF-8');
         $this->dom->load($this->serviceDefinitionFile);
-        
+
         $this->mergeRoleFilesConfig($roleFiles);
     }
 
@@ -92,7 +92,7 @@ class ServiceDefinition
         if (isset($roleFiles['exclude'])) {
             $this->roleFiles['exclude'] = array_merge($this->roleFiles['exclude'], $roleFiles['exclude']);
         }
-        
+
         if (isset($roleFiles['include'])) {
             foreach ($roleFiles['include'] as $include) {
                 $key = array_search($include, $this->roleFiles['exclude']);
@@ -132,21 +132,21 @@ class ServiceDefinition
         if (in_array($name, $existingRoles)) {
             throw new \RuntimeException(sprintf("Role with name %s already exists.", $name));
         }
-        
+
         $webrole = new \DOMDocument('1.0', 'UTF-8');
         $webrole->load(__DIR__ . '/../Resources/role_template/WebRole.xml');
-        
+
         $roles = $webrole->getElementsByTagName('WebRole');
         $webRoleNode = $roles->item(0);
         $webRoleNode->setAttribute('name', $name);
-        
+
         $sites = $webrole->getElementsByTagName('Site');
         $siteNode = $sites->item(0);
         $siteNode->setAttribute('physicalDirectory', $name . '\\');
-        
+
         $webRoleNode = $this->dom->importNode($webRoleNode, true);
         $this->dom->documentElement->appendChild($webRoleNode);
-        
+
         $this->save();
     }
 
@@ -159,13 +159,35 @@ class ServiceDefinition
 
     public function addImport($moduleName)
     {
+        if ($this->hasImport($moduleName)) {
+            return;
+        }
+
         $importNode = $this->dom->createElement('Import');
         $importNode->setAttribute('moduleName', $moduleName);
-        
+
         $imports = $this->dom->getElementsByTagName('Imports')->item(0);
         $imports->appendChild($importNode);
-        
+
         $this->save();
+    }
+
+    public function hasImport($moduleName)
+    {
+        $importNodesList = $this->dom->getElementsByTagName('Import');
+
+        if (0 !== $importNodesList->length) {
+            return false;
+        }
+
+        foreach ($importNodesList as $importNode) {
+            if ($importNode->hasAttributes() && $importNode->attributes->getNamedItem($moduleName)) {
+                // Should we check that ALL imports have the $moduleName
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function getValues($tagName, $attributeName)
@@ -184,7 +206,7 @@ class ServiceDefinition
         $dirs = array();
         foreach ($nodes as $node) {
             $sites = $node->getElementsByTagName('Site');
-            
+
             if (count($sites)) {
                 $dirs[$node->getAttribute('name')] = realpath(dirname($this->serviceDefinitionFile) . DIRECTORY_SEPARATOR . rtrim($sites->item(0)->getAttribute('physicalDirectory'), "\\"));
             }
@@ -208,9 +230,9 @@ class ServiceDefinition
      * paths. Only these files are then copied during the cspack.exe process to
      * the target deployment directory or package file.
      *
-     * @param string $inputDir            
-     * @param string $outputDir            
-     * @param string $roleFileDir            
+     * @param string $inputDir
+     * @param string $outputDir
+     * @param string $roleFileDir
      * @return array
      */
     public function createRoleFiles($inputDir, $outputDir, $roleFileDir = null)
@@ -220,12 +242,12 @@ class ServiceDefinition
         $seenDirs = array();
         $longPaths = array();
         $roleFiles = array();
-        
+
         foreach ($this->getWebRoleNames() as $roleName) {
             $dir = realpath($inputDir);
             $roleFilePath = sprintf('%s/%s.roleFiles.txt', $roleFileDir, $roleName);
             $roleFiles[$roleName] = $roleFilePath;
-            
+
             if (isset($seenDirs[$dir])) {
                 // we have seen this directory already, just copy the known
                 // file with a new role file name.
@@ -234,10 +256,10 @@ class ServiceDefinition
             }
             $seenDirs[$dir] = $roleFilePath;
             $roleFile = $this->computeRoleFileContents($dir, $roleName, $outputDir, $longPaths);
-            
+
             file_put_contents($roleFilePath, $roleFile);
         }
-        
+
         if ($longPaths) {
             throw new \RuntimeException("Paths are too long. Not more than 248 chars per directory and 260 per file name allowed:\n" . implode("\n", $longPaths));
         }
@@ -247,25 +269,25 @@ class ServiceDefinition
     /**
      * Compute the roleFiles.txt content that is necessary for a given role.
      *
-     * @param string $dir            
-     * @param string $roleName            
-     * @param string $outputPath            
+     * @param string $dir
+     * @param string $roleName
+     * @param string $outputPath
      * @return string
      */
     private function computeRoleFileContents($dir, $roleName, $outputDir, array &$longPaths)
     {
         $roleFile = "";
         $iterator = $this->getIterator($dir);
-        
+
         // optimization to inline vendor role files. Since vendor files
         // never change during development, their list can be computed
         // during vendor initialization (composer or bin/vendors scripts)
         // and does not need to be reperformed.
         if (file_exists($dir . '/vendor/azureRoleFiles.txt') && ! in_array("vendor", $this->roleFiles['exclude'])) {
-            
+
             $roleFile .= file_get_contents($dir . '/vendor/azureRoleFiles.txt');
         }
-        
+
         $length = strlen($dir) + 1;
         foreach ($iterator as $file) {
             if (is_dir($file)) {
@@ -278,7 +300,7 @@ class ServiceDefinition
             }
             $roleFile .= $path . ";" . $path . "\r\n";
         }
-        
+
         return $roleFile;
     }
 
@@ -294,11 +316,11 @@ class ServiceDefinition
                 $subdirs[basename($subdir)] = $subdir;
             }
         }
-        
+
         if (file_exists($dir . '/vendor/azureRoleFiles.txt')) {
             unset($subdirs["vendor"]);
         }
-        
+
         // Getting files in subdirs
         $finder = new Finder();
         $iterator = $finder->files()
@@ -314,7 +336,7 @@ class ServiceDefinition
         foreach ($this->roleFiles['notName'] as $notName) {
             $iterator->notName($notName);
         }
-        
+
         return $iterator;
     }
 }
