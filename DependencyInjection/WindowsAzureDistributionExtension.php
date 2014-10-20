@@ -196,7 +196,7 @@ class WindowsAzureDistributionExtension extends Extension
      */
     public function getAlias()
     {
-        return 'windows_azure';
+        return 'windows_azure_distribution';
     }
 
     /**
