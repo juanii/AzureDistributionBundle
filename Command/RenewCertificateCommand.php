@@ -43,22 +43,21 @@ class RenewCertificateCommand extends ContainerAwareCommand
         }
 
         $roleName = 'Sf2.Web';
-        
+
         if (extension_loaded('openssl')) {
             $length = 16;
             $keyPassword = base64_encode(openssl_random_pseudo_bytes(8, $strong));
             $keyPassword = substr($keyPassword, 0, $length);
             $desktopPassword = base64_encode(openssl_random_pseudo_bytes(8, $strong));
             $desktopPassword = substr($desktopPassword, 0, $length);
-            
-            $deployment->generateRemoteDesktopKey($roleName, $desktopPassword, $keyPassword);
-            
+
+            $deployment->generateRemoteDesktopKey($roleName, $desktopPassword, $keyPassword, true);
+
             $output->writeln('');
-            $output->writeln('Automatically created certificates to open a remote desktop to this role.');
+            $output->writeln('New created certificates to open a remote desktop to this role.');
             $output->writeln('Private Key Password: <info>' . $keyPassword . '</info>');
             $output->writeln('RemoteDesktop Password: <info>' . $desktopPassword . '</info>');
             $output->writeln('<comment>Write these passwords down, you need them during deployment.</comment>');
-            $output->writeln('You can disable RemoteDesktop in ServiceConfiguration.cscfg');
         }
     }
 }
