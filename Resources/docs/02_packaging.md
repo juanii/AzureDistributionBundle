@@ -54,3 +54,9 @@ In Symfony 2.1 and higher put the following block into your applications compose
         "post-update-cmd": "WindowsAzure\\DistributionBundle\\Deployment\\VendorRoleFilesListener::listenPostInstallUpdate",
         "post-install-cmd": "WindowsAzure\\DistributionBundle\\Deployment\\VendorRoleFilesListener::listenPostInstallUpdate"
     }
+
+## Renew remote desktop certificate
+
+Natively, the generated certificate for remote desktop access is valid for one year. If you need to just renew the certificate, you could
+simply use the builtin Symfony command `azure:cloud-services:renew-certificate`. This command will automatically generate new certificates,
+put them into the `azure/Sf2.web` directory and update the ServiceConfiguration file.
