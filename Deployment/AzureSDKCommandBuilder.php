@@ -137,6 +137,7 @@ class AzureSDKCommandBuilder
         $binDirectories = array(
             'Windows Azure SDK\*\bin',
             'Microsoft SDKs\Windows Azure\.NET SDK\*\bin',
+            'Microsoft SDKs\Azure\.NET SDK\*\bin',
             'Windows Azure Emulator\emulator'
         );
         foreach ($programDirectories as $programDirectory) {
