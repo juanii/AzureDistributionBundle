@@ -6,13 +6,15 @@
 // fallback.
 if (isset($_SERVER['ApplicationPath']) && file_exists($_SERVER['ApplicationPath'])) {
     $appRoot = $_SERVER['ApplicationPath'] . '\app';
-} else if ( file_exists("E:\approot\app")) {
-    $appRoot = "E:\approot\app";
-} else if ( file_exists("F:\approot\app")) {
-    $appRoot = "F:\approot\app";
-} else {
-    $appRoot = __DIR__ . '\..\..\approot\app';
-}
+} else 
+    if (file_exists("E:\approot\app")) {
+        $appRoot = "E:\approot\app";
+    } else 
+        if (file_exists("F:\approot\app")) {
+            $appRoot = "F:\approot\app";
+        } else {
+            $appRoot = __DIR__ . '\..\..\approot\app';
+        }
 
 use Symfony\Component\ClassLoader\ApcClassLoader;
 
@@ -21,13 +23,13 @@ $loader = new ApcClassLoader('azure', $loader);
 $loader->register(true);
 
 require_once $appRoot . '\AppKernel.php';
-//require_once $appRoot . '\AppCache.php';
+// require_once $appRoot . '\AppCache.php';
 
 use Symfony\Component\HttpFoundation\Request;
 
 $kernel = new AppKernel('azure', false);
 $kernel->loadClassCache();
-//$kernel = new AppCache($kernel);
+// $kernel = new AppCache($kernel);
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);
 $response->send();

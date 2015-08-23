@@ -1,25 +1,34 @@
 {
-    "name": "brainsonic/azure-distribution-bundle",
-    "description": "Integration of Windows Azure SDK and workflows into Symfony applications.",
-    "license": "MIT",
-    "type": "symfony-bundle",
-    "authors": [
-        {"name": "Benjamin Eberlei", "email": "kontakt@beberlei.de"},
-        {"name": "Stéphane Escandell", "email": "stephane.escandell@gmail.com"}
-    ],
-    "require": {
-        "symfony/symfony": "~2.3",
-        "microsoft/windowsazure": "0.4.*"
+	"name" : "brainsonic/azure-distribution-bundle",
+	"description" : "Integration of Windows Azure SDK and workflows into Symfony applications.",
+	"license" : "MIT",
+	"type" : "symfony-bundle",
+	"authors" : [{
+			"name" : "Benjamin Eberlei",
+			"email" : "kontakt@beberlei.de"
+		}, {
+			"name" : "Stéphane Escandell",
+			"email" : "stephane.escandell@gmail.com"
+		}
+	],
+	"require" : {
+		"symfony/symfony" : "~2.3",
+        "microsoft/windowsazure" : "dev-dev#fdaf20953cb611b19abe6a24bf3d595233b7b8ce",
+        "pear-pear.php.net/http_request2": "*",
+        "pear-pear.php.net/mail_mime": "*",
+        "pear-pear.php.net/mail_mimedecode": "*"
     },
-    "repositories": [
-        {
-            "type": "pear",
-            "url": "http://pear.php.net"
-        }
-    ],
-    "autoload": {
-        "psr-0": { "WindowsAzure\\DistributionBundle":"" }
-    },
-    "target-dir": "WindowsAzure/DistributionBundle"
+    "repositories": [{
+        "type": "pear",
+        "url": "http://pear.php.net"
+    }],
+	"require-dev": {
+	    "phpunit/phpunit": "4.1.*"
+	},
+	"autoload" : {
+		"psr-0" : {
+			"WindowsAzure\\DistributionBundle" : ""
+		}
+	},
+	"target-dir" : "WindowsAzure/DistributionBundle"
 }
-

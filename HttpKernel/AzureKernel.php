@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\HttpKernel;
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -28,7 +28,9 @@ use Symfony\Component\HttpKernel\Kernel;
  */
 abstract class AzureKernel extends Kernel
 {
+
     /**
+     *
      * @var string
      */
     private $tempDir;
@@ -36,16 +38,16 @@ abstract class AzureKernel extends Kernel
     public function init()
     {
         parent::init();
-
-        if (isset($_SERVER['RdRoleId'])
-            || isset($_SERVER['INSTANCE_ID'])) {
+        
+        if (isset($_SERVER['RdRoleId']) || isset($_SERVER['INSTANCE_ID'])) {
             $this->tempDir = sys_get_temp_dir();
-        } else if (isset($_SERVER['DEPLOYMENT_TEMP'])) {
-            // Windows Azure Websites during Kudu deployment
-            $this->tempDir = $_SERVER['DEPLOYMENT_TEMP'];
-        } else {
-            $this->tempDir = $this->rootDir;
-        }
+        } else 
+            if (isset($_SERVER['DEPLOYMENT_TEMP'])) {
+                // Windows Azure Websites during Kudu deployment
+                $this->tempDir = $_SERVER['DEPLOYMENT_TEMP'];
+            } else {
+                $this->tempDir = $this->rootDir;
+            }
     }
 
     public function getCacheDir()

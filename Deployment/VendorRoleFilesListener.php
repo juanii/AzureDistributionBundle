@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Deployment;
 
 use Symfony\Component\Finder\Finder;
@@ -25,6 +25,7 @@ use Symfony\Component\Finder\Finder;
  */
 class VendorRoleFilesListener
 {
+
     /**
      * Generating an azureRoleFiles.txt as post updatE/install hook in
      * composer.
@@ -32,42 +33,48 @@ class VendorRoleFilesListener
      * Put the following into your root packages "composer.json":
      *
      * "scripts": {
-     *    "post-update-cmd": "WindowsAzure\\DistributionBundle\\Deployment\\VendorRoleFilesListener::listenPostInstallUpdate",
-     *    "post-install-cmd": "WindowsAzure\\DistributionBundle\\Deployment\\VendorRoleFilesListener::listenPostInstallUpdate"
+     * "post-update-cmd": "WindowsAzure\\DistributionBundle\\Deployment\\VendorRoleFilesListener::listenPostInstallUpdate",
+     * "post-install-cmd": "WindowsAzure\\DistributionBundle\\Deployment\\VendorRoleFilesListener::listenPostInstallUpdate"
      * }
      *
-     * @param object $event
+     * @param object $event            
      * @return void
      */
     static public function listenPostInstallUpdate($event)
     {
         $io = $event->getIo();
         $io->write('<info>Generating vendor/azureRoleFiles.txt for Azure deployment</info>', true);
-        $vendorPath = $event->getComposer()->getConfig()->get('vendor-dir');
+        $vendorPath = $event->getComposer()
+            ->getConfig()
+            ->get('vendor-dir');
         self::generateVendorRolesFile($vendorPath);
     }
 
     static public function generateVendorRolesFile($vendorDir)
     {
         $vendorDir = realpath($vendorDir);
-        if ( !file_exists($vendorDir) || !is_dir($vendorDir)) {
+        if (! file_exists($vendorDir) || ! is_dir($vendorDir)) {
             throw new \RuntimeException("No valid vendor directory given.");
         }
         $dirName = basename($vendorDir);
-
+        
         // TODO: add options from composer so user can add
         // personnalized exclude rules.
         
         $finder = new Finder();
         $finder->files()
-               ->in($vendorDir)
-               ->ignoreVCS(true)
-               ->ignoreDotFiles(false)
-               ->exclude(array('tests', 'Tests', 'TestsProject'))
-               ->exclude('test-suite')
-               ->exclude('docs')
-               ->notName('#(.*)\.swp$#');
-
+            ->in($vendorDir)
+            ->ignoreVCS(true)
+            ->ignoreDotFiles(false)
+            ->exclude(array(
+            'tests',
+            'Tests',
+            'TestsProject'
+        ))
+            ->exclude('test-suite')
+            ->exclude('docs')
+            ->notName('#(.*)\.swp$#');
+        
         $length = strlen($vendorDir) + 1;
         $roleFile = "";
         foreach ($finder as $file) {
@@ -75,9 +82,9 @@ class VendorRoleFilesListener
                 continue;
             }
             $path = $dirName . '\\' . str_replace(DIRECTORY_SEPARATOR, "\\", substr($file, $length));
-            $roleFile .= $path .";".$path."\r\n";
+            $roleFile .= $path . ";" . $path . "\r\n";
         }
-        file_put_contents($vendorDir."/azureRoleFiles.txt", $roleFile);
+        file_put_contents($vendorDir . "/azureRoleFiles.txt", $roleFile);
     }
 }
 

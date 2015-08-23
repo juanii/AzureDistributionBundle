@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Deployment;
 
 /**
@@ -20,38 +20,40 @@ namespace WindowsAzure\DistributionBundle\Deployment;
  */
 class ServiceConfiguration
 {
+
     /**
+     *
      * @var string
      */
     private $serviceConfigurationFile;
 
     /**
+     *
      * @var DOMDocument
      */
     private $dom;
 
     /**
+     *
      * @var array
      */
     private $storage;
 
     /**
+     *
      * @param string $serviceConfigurationFile
      * @param array $storage
      */
     public function __construct($serviceConfigurationFile, array $storage = array())
     {
-        if (!file_exists($serviceConfigurationFile)) {
-            throw new \InvalidArgumentException(sprintf(
-                "No valid file-path given. The ServiceConfiguration should be at %s but could not be found.",
-                $serviceConfigurationFile
-            ));
+        if (! file_exists($serviceConfigurationFile)) {
+            throw new \InvalidArgumentException(sprintf("No valid file-path given. The ServiceConfiguration should be at %s but could not be found.", $serviceConfigurationFile));
         }
 
         $this->serviceConfigurationFile = $serviceConfigurationFile;
-        $this->storage                  = $storage;
-        $this->dom                      = new \DOMDocument('1.0', 'UTF-8');
-        $this->dom->formatOutput        = true;
+        $this->storage = $storage;
+        $this->dom = new \DOMDocument('1.0', 'UTF-8');
+        $this->dom->formatOutput = true;
         $this->dom->load($this->serviceConfigurationFile);
     }
 
@@ -88,8 +90,7 @@ class ServiceConfiguration
     private function save()
     {
         if ($this->dom->save($this->serviceConfigurationFile) === false) {
-            throw new \RuntimeException(sprintf("Could not write ServiceConfiguration to '%s'",
-                        $this->serviceConfigurationFile));
+            throw new \RuntimeException(sprintf("Could not write ServiceConfiguration to '%s'", $this->serviceConfigurationFile));
         }
     }
 
@@ -111,13 +112,12 @@ class ServiceConfiguration
         foreach ($settings as $setting) {
             if ($development) {
                 $setting->setAttribute('value', 'UseDevelopmentStorage=true');
-            } else if (strlen($setting->getAttribute('value')) === 0) {
-                if ($this->storage) {
-                    $setting->setAttribute('value', sprintf('DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s',
-                        $this->storage['accountName'], $this->storage['accountKey']
-                    ));
-                } else {
-                    throw new \RuntimeException(<<<EXC
+            } else
+                if (strlen($setting->getAttribute('value')) === 0) {
+                    if ($this->storage) {
+                        $setting->setAttribute('value', sprintf('DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s', $this->storage['accountName'], $this->storage['accountKey']));
+                    } else {
+                        throw new \RuntimeException(<<<EXC
 ServiceConfiguration.csdef: Missing value for
 'Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString'.
 
@@ -130,9 +130,9 @@ app/config/config.yml
 If you don't want to enable diagnostics you should delete the
 connection string elements from ServiceConfiguration.csdef file.
 EXC
-                    );
+);
+                    }
                 }
-            }
         }
 
         $dom->save($targetPath . '/ServiceConfiguration.cscfg');
@@ -151,7 +151,7 @@ EXC
         $xpath->registerNamespace('sc', $namespaceUri);
 
         $xpathExpression = '//sc:Role[@name="' . $roleName . '"]//sc:ConfigurationSettings//sc:Setting[@name="' . $name . '"]';
-        $settingList     = $xpath->evaluate($xpathExpression);
+        $settingList = $xpath->evaluate($xpathExpression);
 
         if ($settingList->length == 1) {
             $settingNode = $settingList->item(0);
@@ -191,9 +191,18 @@ EXC
 
         if ($certificateList->length == 1) {
             $certificatesNode = $certificateList->item(0);
-
+            $certificateNodeToDelete = null;
             foreach ($certificatesNode->childNodes as $certificateNode) {
-                $certificatesNode->removeElement($certificateNode);
+                if (!$certificateNode instanceof \DOMElement) {
+                    continue;
+                }
+
+                if ('Microsoft.WindowsAzure.Plugins.RemoteAccess.PasswordEncryption' == $certificateNode->getAttribute('name')) {
+                    $certificateNodeToDelete = $certificateNode;
+                }
+            }
+            if (!is_null($certificateNodeToDelete)) {
+                $certificatesNode->removeChild($certificateNodeToDelete);
             }
         } else {
             $certificatesNode = $this->dom->createElementNS($namespaceUri, 'Certificates');

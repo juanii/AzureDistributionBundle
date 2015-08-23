@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Deployment\Assets;
 
 use Symfony\Component\Finder\Finder;
@@ -24,6 +24,7 @@ use Assetic\Factory\LazyAssetManager;
  */
 abstract class AssetStrategy
 {
+
     protected $container;
 
     public function __construct($container)
@@ -40,6 +41,7 @@ abstract class AssetStrategy
     abstract public function deploy($documentRoot, $buildNumber);
 
     /**
+     *
      * @return Filesystem
      */
     abstract protected function getFilesystem();
@@ -47,28 +49,28 @@ abstract class AssetStrategy
     protected function moveTo($targetArg)
     {
         $filesystem = $this->getFilesystem();
-
+        
         // Create the bundles directory otherwise symlink will fail.
-        $filesystem->mkdir($targetArg.'/bundles/', 0777);
+        $filesystem->mkdir($targetArg . '/bundles/', 0777);
         $bundles = $this->container->get('kernel')->getBundles();
-
+        
         foreach ($bundles as $bundle) {
-            if (is_dir($originDir = $bundle->getPath().'/Resources/public')) {
-                $targetDir = $targetArg.'/bundles/'.preg_replace('/bundle$/', '', strtolower($bundle->getName()));
-
+            if (is_dir($originDir = $bundle->getPath() . '/Resources/public')) {
+                $targetDir = $targetArg . '/bundles/' . preg_replace('/bundle$/', '', strtolower($bundle->getName()));
+                
                 $filesystem->remove($targetDir);
                 $filesystem->mkdir($targetDir, 0777);
                 // We use a custom iterator to ignore VCS files
                 $filesystem->mirror($originDir, $targetDir, Finder::create()->in($originDir));
             }
         }
-
-        if (!$this->container->has('assetic.asset_manager')) {
+        
+        if (! $this->container->has('assetic.asset_manager')) {
             return;
         }
-
+        
         $am = $this->container->get('assetic.asset_manager');
-
+        
         foreach ($am->getNames() as $name) {
             $this->doDump($am->get($name), $targetArg);
         }
@@ -80,22 +82,20 @@ abstract class AssetStrategy
         $ref = new \ReflectionMethod($writer, 'getCombinations');
         $ref->setAccessible(true);
         $combinations = $ref->invoke($writer, $asset->getVars());
-
+        
         foreach ($combinations as $combination) {
             $asset->setValues($combination);
-
-            $target = rtrim($documentRoot, '/').'/'.str_replace('_controller/', '',
-                VarUtils::resolve($asset->getTargetPath(), $asset->getVars(),
-                    $asset->getValues()));
-
-            if (!is_dir($dir = dirname($target))) {
+            
+            $target = rtrim($documentRoot, '/') . '/' . str_replace('_controller/', '', VarUtils::resolve($asset->getTargetPath(), $asset->getVars(), $asset->getValues()));
+            
+            if (! is_dir($dir = dirname($target))) {
                 if (false === @mkdir($dir, 0777, true)) {
-                    throw new \RuntimeException('Unable to create directory '.$dir);
+                    throw new \RuntimeException('Unable to create directory ' . $dir);
                 }
             }
-
+            
             if (false === @file_put_contents($target, $asset->dump())) {
-                throw new \RuntimeException('Unable to write file '.$target);
+                throw new \RuntimeException('Unable to write file ' . $target);
             }
         }
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
@@ -24,16 +24,20 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
  * Windows Azure Extension
  *
  * @author Benjamin Eberlei <kontakt@beberlei.de>
+ * @author Stéphane Escandell <stephane.escandell@gmail.com>
  */
 class WindowsAzureDistributionExtension extends Extension
 {
+    /**
+     * (non-PHPdoc)
+     * @see \Symfony\Component\DependencyInjection\Extension\ExtensionInterface::load()
+     */
     public function load(array $configs, ContainerBuilder $container)
     {
-        $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.xml');
 
-        $configuration = new Configuration();
-        $config = $this->processConfiguration($configuration, $configs);
+        $config = $this->processConfiguration($this->getConfiguration($configs, $container), $configs);
 
         $container->setParameter('windows_azure_distribution.config.deployment', $config['deployment']);
         $container->setParameter('windows_azure_distribution.streams', $config['streams']);
@@ -59,10 +63,7 @@ class WindowsAzureDistributionExtension extends Extension
         }
 
         $loader->load('keyvaluestore.xml');
-        $container->setAlias(
-            'windows_azure_distribution.key_value_store.storage_client',
-            'windows_azure.table.' . $config['key_value_store']['connection_name']
-        );
+        $container->setAlias('windows_azure_distribution.key_value_store.storage_client', 'windows_azure.table.' . $config['key_value_store']['connection_name']);
     }
 
     /**
@@ -73,24 +74,24 @@ class WindowsAzureDistributionExtension extends Extension
      */
     protected function loadServices($config, $container)
     {
-        if ( ! isset($config['services'])) {
+        if (! isset($config['services'])) {
             return;
         }
 
         $serviceMethods = array(
-            'blob'        => 'createBlobService',
-            'table'       => 'createTableService',
-            'queue'       => 'createQueueService',
+            'blob' => 'createBlobService',
+            'table' => 'createTableService',
+            'queue' => 'createQueueService',
             'service_bus' => 'createServiceBusService',
-            'management'  => 'createServiceManagementService',
+            'management' => 'createServiceManagementService'
         );
 
         $serviceClass = array(
-            'blob'        => 'WindowsAzure\Blob\BlobRestProxy',
-            'table'       => 'WindowsAzure\Table\TableRestProxy',
-            'queue'       => 'WindowsAzure\Queue\QueueRestProxy',
+            'blob' => 'WindowsAzure\Blob\BlobRestProxy',
+            'table' => 'WindowsAzure\Table\TableRestProxy',
+            'queue' => 'WindowsAzure\Queue\QueueRestProxy',
             'service_bus' => 'WindowsAzure\ServiceBus\ServiceBusRestProxy',
-            'management'  => 'WindowsAzure\ServiceManagement\ServiceManagementRestProxy',
+            'management' => 'WindowsAzure\ServiceManagement\ServiceManagementRestProxy'
         );
 
         foreach ($config['services'] as $type => $connectionStrings) {
@@ -98,7 +99,9 @@ class WindowsAzureDistributionExtension extends Extension
                 $def = new Definition($serviceClass[$type]);
                 $def->setFactoryService('windows_azure.services_builder');
                 $def->setFactoryMethod($serviceMethods[$type]);
-                $def->setArguments(array($connectionString));
+                $def->setArguments(array(
+                    $connectionString
+                ));
 
                 $container->setDefinition(sprintf('windows_azure.%s.%s', $type, $name), $def);
             }
@@ -107,7 +110,7 @@ class WindowsAzureDistributionExtension extends Extension
 
     protected function loadSharding($config, $container)
     {
-        if ( ! isset($config['federations'])) {
+        if (! isset($config['federations'])) {
             return;
         }
 
@@ -136,15 +139,15 @@ class WindowsAzureDistributionExtension extends Extension
 
     protected function loadSession($config, $container)
     {
-        if ( ! isset($config['session'])) {
+        if (! isset($config['session'])) {
             return;
         }
 
         $sessionConfig = $config['session'];
 
-        switch($sessionConfig['type']) {
+        switch ($sessionConfig['type']) {
             case 'pdo':
-                if (!isset($sessionConfig['database'])) {
+                if (! isset($sessionConfig['database'])) {
                     throw new \RuntimeException("Key windows_azure_distribution.session.database has to be set when PDO is selected.");
                 }
 
@@ -154,13 +157,18 @@ class WindowsAzureDistributionExtension extends Extension
                     $sessionConfig['database']['username'],
                     $sessionConfig['database']['password']
                 ));
-                $definition->addMethodCall('setAttribute', array(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION));
+                $definition->addMethodCall('setAttribute', array(
+                    \PDO::ATTR_ERRMODE,
+                    \PDO::ERRMODE_EXCEPTION
+                ));
                 $container->setDefinition('windows_azure_distribution.session.pdo', $definition);
 
                 $definition = new Definition('%windows_azure_distribution.session_handler.pdo.class%');
                 $definition->setArguments(array(
                     new Reference('windows_azure_distribution.session.pdo'),
-                    array('db_table' => $sessionConfig['database']['table'])
+                    array(
+                        'db_table' => $sessionConfig['database']['table']
+                    )
                 ));
 
                 $container->setDefinition('windows_azure_distribution.session_handler', $definition);
@@ -169,7 +177,9 @@ class WindowsAzureDistributionExtension extends Extension
                 $definition = new Definition('%windows_azure_distribution.cache_warmer.dbtable.class%');
                 $definition->setArguments(array(
                     new Reference('windows_azure_distribution.session.pdo'),
-                    array('db_table' => $sessionConfig['database']['table'])
+                    array(
+                        'db_table' => $sessionConfig['database']['table']
+                    )
                 ));
                 $definition->addTag('kernel.cache_warmer');
 
@@ -178,6 +188,24 @@ class WindowsAzureDistributionExtension extends Extension
             default:
                 throw new \RuntimeException("Unknown session config!");
         }
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see \Symfony\Component\DependencyInjection\Extension\Extension::getAlias()
+     */
+    public function getAlias()
+    {
+        return 'windows_azure_distribution';
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see \Symfony\Component\DependencyInjection\Extension\Extension::getConfiguration()
+     */
+    public function getConfiguration(array $config, ContainerBuilder $container)
+    {
+        return new Configuration($this->getAlias());
     }
 }
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Tests;
 
 use WindowsAzure\DistributionBundle\DependencyInjection\WindowsAzureDistributionExtension;
@@ -21,10 +21,11 @@ use Symfony\Component\DependencyInjection\Compiler\ResolveDefinitionTemplatesPas
 
 class ContainerTest extends \PHPUnit_Framework_TestCase
 {
+
     public function testAzureSdkCommandBuilder()
     {
         $container = $this->createContainer();
-
+        
         $service = $container->get('windows_azure_distribution.deployment.azure_sdk_command_builder');
         $this->assertInstanceOf('WindowsAzure\DistributionBundle\Deployment\AzureSDKCommandBuilder', $service);
     }
@@ -41,7 +42,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $config = array(
             'services' => array(
                 'blob' => array(
-                    'test' => 'UseDevelopmentStorage=true',
+                    'test' => 'UseDevelopmentStorage=true'
                 ),
                 'queue' => array(
                     'test2' => 'DefaultEndpointsProtocol=[http|https];AccountName=[yourAccount];AccountKey=[yourKey]'
@@ -50,22 +51,22 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
                     'test3' => 'DefaultEndpointsProtocol=[http|https];AccountName=[yourAccount];AccountKey=[yourKey]'
                 ),
                 'service_bus' => array(
-                    'test4' => 'Endpoint=[yourEndpoint];SharedSecretIssuer=[yourWrapAuthenticationName];SharedSecretValue=[yourWrapPassword]',
+                    'test4' => 'Endpoint=[yourEndpoint];SharedSecretIssuer=[yourWrapAuthenticationName];SharedSecretValue=[yourWrapPassword]'
                 ),
                 'management' => array(
-                    'test5' => 'SubscriptionID=[yourSubscriptionId];CertificatePath=[filePathToYourCertificate]',
-                ),
-            ),
+                    'test5' => 'SubscriptionID=[yourSubscriptionId];CertificatePath=[filePathToYourCertificate]'
+                )
+            )
         );
-
+        
         $container = $this->createContainer($config);
-
+        
         $this->assertTrue($container->has('windows_azure.blob.test'));
         $this->assertTrue($container->has('windows_azure.queue.test2'));
         $this->assertTrue($container->has('windows_azure.table.test3'));
         $this->assertTrue($container->has('windows_azure.service_bus.test4'));
         $this->assertTrue($container->has('windows_azure.management.test5'));
-
+        
         $this->assertInstanceOf('WindowsAzure\Blob\BlobRestProxy', $container->get('windows_azure.blob.test'));
     }
 
@@ -74,14 +75,17 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $config = array(
             'services' => array(
                 'blob' => array(
-                    'test' => 'UseDevelopmentStorage=true',
-                ),
+                    'test' => 'UseDevelopmentStorage=true'
+                )
             ),
-            'assets' => array('type' => 'blob', 'connection_name' => 'test')
+            'assets' => array(
+                'type' => 'blob',
+                'connection_name' => 'test'
+            )
         );
-
+        
         $container = $this->createContainer($config);
-
+        
         $this->assertInstanceOf('WindowsAzure\DistributionBundle\Deployment\Assets\BlobStrategy', $container->get('windows_azure_distribution.assets'));
     }
 
@@ -94,15 +98,15 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
                     'host' => 'localhost',
                     'username' => 'foo',
                     'password' => 'bar',
-                    'database' => 'db',
+                    'database' => 'db'
                 )
-            ),
+            )
         );
         $container = $this->createContainer($config);
         $def = $container->findDefinition('session.handler');
-
+        
         $this->assertEquals('%windows_azure_distribution.session_handler.pdo.class%', $def->getClass());
-
+        
         $def = $container->findDefinition('windows_azure_distribution.session.pdo');
         $args = $def->getArguments();
         $this->assertEquals('sqlsrv:server=localhost;Database=db', $args[0]);
@@ -114,46 +118,56 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
             'services' => array(
                 'table' => array(
                     'test' => 'DefaultEndpointsProtocol=[http|https];AccountName=[yourAccount];AccountKey=[yourKey]'
-                ),
+                )
             ),
             'key_value_store' => array(
                 'connection_name' => 'test'
             )
         );
-
+        
         $container = $this->createContainer($config);
-
+        
         $this->assertTrue($container->has('windows_azure_distribution.key_value_store.entity_manager'));
         $this->assertTrue($container->has('windows_azure_distribution.key_value_store.storage_client'));
     }
 
     public function testStreams()
     {
-        $config = array('streams' => array('foo' => 'bar'));
-
+        $config = array(
+            'streams' => array(
+                'foo' => 'bar'
+            )
+        );
+        
         $container = $this->createContainer($config);
-
-        $this->assertEquals(array('foo' => 'bar'), $container->getParameter('windows_azure_distribution.streams'));
+        
+        $this->assertEquals(array(
+            'foo' => 'bar'
+        ), $container->getParameter('windows_azure_distribution.streams'));
     }
 
     public function createContainer(array $config = array())
     {
         $container = new ContainerBuilder(new ParameterBag(array(
-            'kernel.debug'       => false,
-            'kernel.bundles'     => array(),
-            'kernel.cache_dir'   => sys_get_temp_dir(),
+            'kernel.debug' => false,
+            'kernel.bundles' => array(),
+            'kernel.cache_dir' => sys_get_temp_dir(),
             'kernel.environment' => 'test',
-            'kernel.root_dir'    => __DIR__ . '/_files/app',
-            'session.storage.options' => array(),
+            'kernel.root_dir' => __DIR__ . '/_files/app',
+            'session.storage.options' => array()
         )));
         $loader = new WindowsAzureDistributionExtension();
         $container->registerExtension($loader);
-        $loader->load(array($config), $container);
-
-        $container->getCompilerPassConfig()->setOptimizationPasses(array(new ResolveDefinitionTemplatesPass()));
+        $loader->load(array(
+            $config
+        ), $container);
+        
+        $container->getCompilerPassConfig()->setOptimizationPasses(array(
+            new ResolveDefinitionTemplatesPass()
+        ));
         $container->getCompilerPassConfig()->setRemovingPasses(array());
         $container->compile();
-
+        
         return $container;
     }
 }

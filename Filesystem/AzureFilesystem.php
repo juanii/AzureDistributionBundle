@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Filesystem;
 
 use Symfony\Component\Filesystem\Filesystem;
@@ -22,6 +22,7 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class AzureFilesystem extends Filesystem
 {
+
     public function mkdir($dirs, $mode = 0777)
     {
         $ret = true;
@@ -29,27 +30,29 @@ class AzureFilesystem extends Filesystem
             if (is_dir($dir)) {
                 continue;
             }
-
+            
             if (strpos($dir, 'azure://') === 0) {
                 $dir = substr($dir, 8);
             }
-
+            
             if (count(explode("/", rtrim($dir, "/"))) > 1) {
                 $ret = true;
             } else {
                 $ret = @mkdir($dir, $mode, true) && $ret;
             }
         }
-
+        
         return $ret;
     }
 
     private function toIterator($files)
     {
-        if (!$files instanceof \Traversable) {
-            $files = new \ArrayObject(is_array($files) ? $files : array($files));
+        if (! $files instanceof \Traversable) {
+            $files = new \ArrayObject(is_array($files) ? $files : array(
+                $files
+            ));
         }
-
+        
         return $files;
     }
 }

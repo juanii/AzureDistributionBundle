@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\CacheWarmer;
 
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
@@ -25,35 +25,39 @@ use PDO;
  */
 class DbSessionTable implements CacheWarmerInterface
 {
+
     /**
+     *
      * @var PDO
      */
     private $pdo;
 
     /**
+     *
      * @var array
      */
     private $dbOptions;
 
     public function __construct(PDO $pdo, array $dbOptions)
     {
-        if (!array_key_exists('db_table', $dbOptions)) {
+        if (! array_key_exists('db_table', $dbOptions)) {
             throw new \InvalidArgumentException('You must provide the "db_table" option for a PdoSessionStorage.');
         }
-
+        
         $this->pdo = $pdo;
         $this->dbOptions = array_merge(array(
-            'db_id_col'   => 'sess_id',
+            'db_id_col' => 'sess_id',
             'db_data_col' => 'sess_data',
             'db_time_col' => 'sess_time',
-            'db_id_length' => '32',
+            'db_id_length' => '32'
         ), $dbOptions);
     }
 
     /**
      * Warms up the cache.
      *
-     * @param string $cacheDir The cache directory
+     * @param string $cacheDir
+     *            The cache directory
      */
     public function warmUp($cacheDir)
     {
@@ -61,16 +65,12 @@ class DbSessionTable implements CacheWarmerInterface
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(1, $this->dbOptions['db_table']);
         $stmt->execute();
-
-        if ( ! $stmt->fetch()) {
-            $sql = "CREATE TABLE " . $this->dbOptions['db_table'] . " (" .
-                   $this->dbOptions['db_id_col'] . " VARCHAR(" . $this->dbOptions['db_id_length'].") PRIMARY KEY NONCLUSTERED, " .
-                   $this->dbOptions['db_data_col'] . " NVARCHAR(MAX), " .
-                   $this->dbOptions['db_time_col'] . " INT)";
+        
+        if (! $stmt->fetch()) {
+            $sql = "CREATE TABLE " . $this->dbOptions['db_table'] . " (" . $this->dbOptions['db_id_col'] . " VARCHAR(" . $this->dbOptions['db_id_length'] . ") PRIMARY KEY NONCLUSTERED, " . $this->dbOptions['db_data_col'] . " NVARCHAR(MAX), " . $this->dbOptions['db_time_col'] . " INT)";
             $this->pdo->exec($sql);
-
-            $sql = "CREATE CLUSTERED INDEX sess_time_idx ON " .
-                    $this->dbOptions['db_table'] . " (" . $this->dbOptions['db_time_col'] . ")";
+            
+            $sql = "CREATE CLUSTERED INDEX sess_time_idx ON " . $this->dbOptions['db_table'] . " (" . $this->dbOptions['db_time_col'] . ")";
             $this->pdo->exec($sql);
         }
     }

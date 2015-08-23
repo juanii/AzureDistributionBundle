@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\Deployment;
 
 use Symfony\Component\Finder\Finder;
@@ -23,40 +23,43 @@ use Symfony\Component\Finder\Finder;
  */
 class ServiceDefinition
 {
+
     /**
+     *
      * @var string
      */
     private $serviceDefinitionFile;
 
     /**
-     * @var DOMDocument
+     *
+     * @var \DOMDocument
      */
     private $dom;
 
     /**
+     *
      * @var array
      */
     private $roleFiles = array();
-    
+
     /**
+     *
      * @var array
      */
     private $customIterators = array();
 
     /**
+     *
      * @param string $serviceDefinitionFile
      */
     public function __construct($serviceDefinitionFile, array $roleFiles = array(), array $customIterators = array())
     {
-        if (!file_exists($serviceDefinitionFile)) {
-            throw new \InvalidArgumentException(sprintf(
-                "No valid file-path given. The ServiceDefinition should be at %s but could not be found.",
-                $serviceDefinitionFile
-            ));
+        if (! file_exists($serviceDefinitionFile)) {
+            throw new \InvalidArgumentException(sprintf("No valid file-path given. The ServiceDefinition should be at %s but could not be found.", $serviceDefinitionFile));
         }
 
         $this->serviceDefinitionFile = $serviceDefinitionFile;
-        
+
         $this->customIterators = $customIterators;
 
         $this->dom = new \DOMDocument('1.0', 'UTF-8');
@@ -69,8 +72,22 @@ class ServiceDefinition
     {
         $this->roleFiles = array(
             'ignoreVCS' => (isset($roleFiles['ignoreVCS'])) ? $roleFiles['ignoreVCS'] : true,
-            'exclude' => array('build', 'cache/dev', 'cache/prod', 'cache/azure', 'logs', 'tests', 'Tests', 'TestsProject', 'docs', 'test-suite', 'role_template'),
-            'notName' => array('#(.*)\.swp$#')
+            'exclude' => array(
+                'build',
+                'cache/dev',
+                'cache/prod',
+                'cache/azure',
+                'logs',
+                'tests',
+                'Tests',
+                'TestsProject',
+                'docs',
+                'test-suite',
+                'role_template'
+            ),
+            'notName' => array(
+                '#(.*)\.swp$#'
+            )
         );
         if (isset($roleFiles['exclude'])) {
             $this->roleFiles['exclude'] = array_merge($this->roleFiles['exclude'], $roleFiles['exclude']);
@@ -125,7 +142,7 @@ class ServiceDefinition
 
         $sites = $webrole->getElementsByTagName('Site');
         $siteNode = $sites->item(0);
-        $siteNode->setAttribute('physicalDirectory', $name . '\\' );
+        $siteNode->setAttribute('physicalDirectory', $name . '\\');
 
         $webRoleNode = $this->dom->importNode($webRoleNode, true);
         $this->dom->documentElement->appendChild($webRoleNode);
@@ -136,13 +153,16 @@ class ServiceDefinition
     private function save()
     {
         if ($this->dom->save($this->serviceDefinitionFile) === false) {
-            throw new \RuntimeException(sprintf("Could not write ServiceDefinition to '%s'",
-                $this->serviceDefinitionFile));
+            throw new \RuntimeException(sprintf("Could not write ServiceDefinition to '%s'", $this->serviceDefinitionFile));
         }
     }
 
     public function addImport($moduleName)
     {
+        if ($this->hasImport($moduleName)) {
+            return;
+        }
+
         $importNode = $this->dom->createElement('Import');
         $importNode->setAttribute('moduleName', $moduleName);
 
@@ -150,6 +170,24 @@ class ServiceDefinition
         $imports->appendChild($importNode);
 
         $this->save();
+    }
+
+    public function hasImport($moduleName)
+    {
+        $importNodesList = $this->dom->getElementsByTagName('Import');
+
+        if (0 !== $importNodesList->length) {
+            return false;
+        }
+
+        foreach ($importNodesList as $importNode) {
+            if ($importNode->hasAttributes() && $importNode->attributes->getNamedItem($moduleName)) {
+                // Should we check that ALL imports have the $moduleName
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function getValues($tagName, $attributeName)
@@ -170,10 +208,7 @@ class ServiceDefinition
             $sites = $node->getElementsByTagName('Site');
 
             if (count($sites)) {
-                $dirs[$node->getAttribute('name')] = realpath(
-                    dirname($this->serviceDefinitionFile) . DIRECTORY_SEPARATOR .
-                    rtrim($sites->item(0)->getAttribute('physicalDirectory'), "\\")
-                );
+                $dirs[$node->getAttribute('name')] = realpath(dirname($this->serviceDefinitionFile) . DIRECTORY_SEPARATOR . rtrim($sites->item(0)->getAttribute('physicalDirectory'), "\\"));
             }
         }
         return $dirs;
@@ -182,7 +217,7 @@ class ServiceDefinition
     public function getPhysicalDirectory($name)
     {
         $dirs = $this->getPhysicalDirectories();
-        if (!isset($dirs[$name])) {
+        if (! isset($dirs[$name])) {
             throw new \RuntimeException(sprintf("There exists no role named '%s'.", $name));
         }
         return $dirs[$name];
@@ -202,7 +237,7 @@ class ServiceDefinition
      */
     public function createRoleFiles($inputDir, $outputDir, $roleFileDir = null)
     {
-        $roleFileDir = $roleFileDir ?: $inputDir;
+        $roleFileDir = $roleFileDir ?  : $inputDir;
         $outputDir = realpath($outputDir);
         $seenDirs = array();
         $longPaths = array();
@@ -248,8 +283,7 @@ class ServiceDefinition
         // never change during development, their list can be computed
         // during vendor initialization (composer or bin/vendors scripts)
         // and does not need to be reperformed.
-        if (file_exists($dir . '/vendor/azureRoleFiles.txt') &&
-            ! in_array("vendor", $this->roleFiles['exclude'])) {
+        if (file_exists($dir . '/vendor/azureRoleFiles.txt') && ! in_array("vendor", $this->roleFiles['exclude'])) {
 
             $roleFile .= file_get_contents($dir . '/vendor/azureRoleFiles.txt');
         }
@@ -262,9 +296,9 @@ class ServiceDefinition
             $path = str_replace(DIRECTORY_SEPARATOR, "\\", substr($file, $length));
             $checkPath = sprintf('%s/roles/%s/approot/%s', $outputDir, $roleName, $path);
             if (strlen($checkPath) >= 248) {
-                $longPaths[] = $checkPath . " (". strlen($checkPath) . ")";
+                $longPaths[] = $checkPath . " (" . strlen($checkPath) . ")";
             }
-            $roleFile .= $path .";".$path."\r\n";
+            $roleFile .= $path . ";" . $path . "\r\n";
         }
 
         return $roleFile;
@@ -274,9 +308,11 @@ class ServiceDefinition
     {
         $dirs = new Finder();
         $subdirs = array();
-        foreach ($dirs->directories()->in($dir)->depth(0) as $subdir) {
-            $subdir = (string)$subdir;
-            if (!in_array(basename($subdir), $this->roleFiles['exclude'])) {
+        foreach ($dirs->directories()
+            ->in($dir)
+            ->depth(0) as $subdir) {
+            $subdir = (string) $subdir;
+            if (! in_array(basename($subdir), $this->roleFiles['exclude'])) {
                 $subdirs[basename($subdir)] = $subdir;
             }
         }
@@ -288,9 +324,9 @@ class ServiceDefinition
         // Getting files in subdirs
         $finder = new Finder();
         $iterator = $finder->files()
-                           ->in($subdirs)
-                           ->ignoreDotFiles(false)
-                           ->ignoreVCS($this->roleFiles['ignoreVCS']);
+            ->in($subdirs)
+            ->ignoreDotFiles(false)
+            ->ignoreVCS($this->roleFiles['ignoreVCS']);
         foreach ($this->customIterators as $customIterator) {
             $iterator->append($customIterator->getIterator($dirs, $subdirs)); // TODO: send the finder?
         }

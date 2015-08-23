@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WindowsAzure DistributionBundle
  *
@@ -10,7 +11,6 @@
  * obtain it through the world-wide-web, please send an email
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
-
 namespace WindowsAzure\DistributionBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
@@ -21,9 +21,23 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  * Windows Azure Configuration
  *
  * @author Benjamin Eberlei <kontakt@beberlei.de>
+ * @author Stéphane Escandell <stephane.escandell@gmail.com>
  */
 class Configuration implements ConfigurationInterface
 {
+    /**
+     * @var string
+     */
+    protected $alias;
+
+    /**
+     * @param string $alias Configuration root alias
+     */
+    public function __construct($alias)
+    {
+        $this->alias = $alias;
+    }
+
     /**
      * Generates the configuration tree builder.
      *
@@ -32,7 +46,7 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('windows_azure');
+        $rootNode = $treeBuilder->root($this->alias);
 
         $rootNode
             ->children()
@@ -64,12 +78,20 @@ class Configuration implements ConfigurationInterface
                     ->addDefaultsIfNotSet()
                     ->children()
                         ->arrayNode('roleFiles')
-                           ->children()
-                                ->scalarNode('ignoreVCS')->defaultValue(true)->end()
-                                ->variableNode('include')->defaultValue(array())->end()
-                                ->variableNode('exclude')->defaultValue(array())->end()
-                                ->variableNode('ignorePatterns')->defaultValue(array())->end()
-                           ->end()
+                            ->children()
+                                ->scalarNode('ignoreVCS')
+                                    ->defaultValue(true)
+                                ->end()
+                                ->variableNode('include')
+                                    ->defaultValue(array())
+                                ->end()
+                                ->variableNode('exclude')
+                                    ->defaultValue(array())
+                                ->end()
+                                ->variableNode('ignorePatterns')
+                                    ->defaultValue(array())
+                                ->end()
+                            ->end()
                         ->end()
                     ->end()
                 ->end()
@@ -80,7 +102,9 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('key_value_store')
                     ->addDefaultsIfNotSet()
                     ->children()
-                        ->scalarNode('connection_name')->defaultValue('')->end()
+                        ->scalarNode('connection_name')
+                            ->defaultValue('')
+                        ->end()
                     ->end()
                 ->end()
                 ->arrayNode('session')
@@ -108,7 +132,11 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('type')
                             ->defaultValue('local')
                             ->validate()
-                                ->ifNotInArray(array('local', 'blob', 'service'))
+                                ->ifNotInArray(array(
+                                    'local',
+                                    'blob',
+                                    'service'
+                                ))
                                 ->thenInvalid('Assets can either deployed on local "webrole" or in "blob" storage.')
                             ->end()
                         ->end()
@@ -119,16 +147,15 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('federations')
                     ->useAttributeAsKey('name')
                     ->prototype('array')
-                        ->children()
-                            ->scalarNode('federationName')->isRequired()->end()
-                            ->scalarNode('distributionKey')->isRequired()->end()
-                            ->scalarNode('distributionType')->isRequired()->end()
-                            ->scalarNode('filteringEnabled')->defaultValue(false)->end()
-                        ->end()
+                    ->children()
+                        ->scalarNode('federationName')->isRequired()->end()
+                        ->scalarNode('distributionKey')->isRequired()->end()
+                        ->scalarNode('distributionType')->isRequired()->end()
+                        ->scalarNode('filteringEnabled')->defaultValue(false)->end()
                     ->end()
                 ->end()
             ->end()
-        ;
+        ->end();
 
         return $treeBuilder;
     }
