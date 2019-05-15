@@ -97,8 +97,10 @@ class WindowsAzureDistributionExtension extends Extension
         foreach ($config['services'] as $type => $connectionStrings) {
             foreach ($connectionStrings as $name => $connectionString) {
                 $def = new Definition($serviceClass[$type]);
-                $def->setFactoryService('windows_azure.services_builder');
-                $def->setFactoryMethod($serviceMethods[$type]);
+                $def->setFactory(array(
+                    new Reference('windows_azure.services_builder'),
+                    $serviceMethods[$type]
+                ));
                 $def->setArguments(array(
                     $connectionString
                 ));

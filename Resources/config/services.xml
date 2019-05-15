@@ -26,9 +26,11 @@
 
 	<services>
 		<service id="windows_azure.services_builder"
-			class="%windows_azure_distribution.services_builder.class%"
-			factory-class="%windows_azure_distribution.services_builder.class%"
-			factory-method="getInstance">
+			class="%windows_azure_distribution.services_builder.class%">
+			<factory
+	    			class="%windows_azure_distribution.services_builder.class%"
+				method="getInstance">
+			</factory>
 		</service>
 
 		<service
