@@ -87,9 +87,9 @@ class WindowsAzureDistributionExtension extends Extension
         );
 
         $serviceClass = array(
-            'blob' => 'WindowsAzure\Blob\BlobRestProxy',
-            'table' => 'WindowsAzure\Table\TableRestProxy',
-            'queue' => 'WindowsAzure\Queue\QueueRestProxy',
+            'blob' => 'MicrosoftAzure\Storage\Blob\BlobRestProxy',
+            'table' => 'MicrosoftAzure\Storage\Table\TableRestProxy',
+            'queue' => 'MicrosoftAzure\Storage\Queue\QueueRestProxy',
             'service_bus' => 'WindowsAzure\ServiceBus\ServiceBusRestProxy',
             'management' => 'WindowsAzure\ServiceManagement\ServiceManagementRestProxy'
         );

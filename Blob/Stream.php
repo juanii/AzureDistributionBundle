@@ -13,9 +13,9 @@
  */
 namespace WindowsAzure\DistributionBundle\Blob;
 
-use WindowsAzure\Blob\BlobRestProxy;
-use WindowsAzure\Blob\Models\ListContainersOptions;
-use WindowsAzure\Blob\Models\CreateBlobOptions;
+use MicrosoftAzure\Storage\Blob\BlobRestProxy;
+use MicrosoftAzure\Storage\Blob\Models\ListContainersOptions;
+use MicrosoftAzure\Storage\Blob\Models\CreateBlobOptions;
 use WindowsAzure\Common\ServiceException;
 use Exception;
 use Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesser;

@@ -13,9 +13,9 @@
  */
 namespace WindowsAzure\DistributionBundle\Deployment\Assets;
 
+use MicrosoftAzure\Storage\Blob\BlobRestProxy;
 use WindowsAzure\DistributionBundle\Filesystem\AzureFilesystem;
 use WindowsAzure\DistributionBundle\Blob\Stream;
-use WindowsAzure\Blob\BlobRestProxy;
 
 /**
  * Serve assets from blob storage

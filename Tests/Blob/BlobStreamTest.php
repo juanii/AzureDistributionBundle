@@ -1,8 +1,8 @@
 <?php
 namespace WindowsAzure\DistributionBundle\Tests\Blob;
 
+use MicrosoftAzure\StorageBlob\Models\ListContainersOptions;
 use WindowsAzure\Common\ServicesBuilder;
-use WindowsAzure\Blob\Models\ListContainersOptions;
 use WindowsAzure\DistributionBundle\Blob\Stream;
 
 class BlobTest extends BlobTestCase

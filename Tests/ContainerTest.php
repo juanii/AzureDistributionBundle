@@ -67,7 +67,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($container->has('windows_azure.service_bus.test4'));
         $this->assertTrue($container->has('windows_azure.management.test5'));
         
-        $this->assertInstanceOf('WindowsAzure\Blob\BlobRestProxy', $container->get('windows_azure.blob.test'));
+        $this->assertInstanceOf('MicrosoftAzure\Storage\Blob\BlobRestProxy', $container->get('windows_azure.blob.test'));
     }
 
     public function testAssets()
