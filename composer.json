@@ -13,10 +13,7 @@
 	],
 	"require" : {
 		"symfony/symfony" : "^2.6 || ^3.0",
-		"microsoft/windowsazure" : "~0.4.3",
-		"pear/http_request2": "*",
-		"pear/mail_mime": "*",
-		"pear/mail_mime-decode": "*"
+		"microsoft/windowsazure" : "~0.4.3 || ~0.5"
 	},
 	"require-dev": {
 		"phpunit/phpunit": "4.1.*"
